@@ -7,17 +7,17 @@ var playerY=canvas.height/2 -5;
 var playerSpeed = 2;
 
 var enemyR = 5;
-var enemyDX = 1;
-var enemyDY = 1;
+var enemyCount = 50;
+var enemySpeedMul = 1;
 
 var heart = 3;
 var imun = false;
 
-var time = 0;
-var score = 0
+var frame = 0;
+var time = 0
 var leftf,rightf,upf,downf = false;
 
-// 37왼 38위 39오 40아
+// 37-left 38-up 39-right 40-down
 function keyDownHandler(e){
     if(e.keyCode == 37){leftf = true;}
     else if(e.keyCode == 38){upf = true;}
@@ -41,7 +41,6 @@ function playerMove(){
 function randomInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
 
 var enemy = [];
-var enemyCount = 30;
 for(var i=0; i<enemyCount; i++){
     if(i<enemyCount/4){
         enemy[i]={x:enemyR+1, y:randomInt(enemyR+1,canvas.height-enemyR-1), dx:1, dy:1};
@@ -58,10 +57,8 @@ for(var i=0; i<enemyCount; i++){
 }
 
 for(var i=0; i<enemyCount; i++){
-    enemy[i].dx = 1.2*(playerX-enemy[i].x)/getDistence(playerX,playerY,enemy[i].x, enemy[i].y);
-    enemy[i].dy = 1.2*(playerY-enemy[i].y)/getDistence(playerX,playerY,enemy[i].x, enemy[i].y);
-    //enemy[i].dx *=2;
-    //enemy[i].dy *=2;
+    enemy[i].dx = randomInt(10,15)/10*(playerX-enemy[i].x)/getDistence(playerX,playerY,enemy[i].x, enemy[i].y);
+    enemy[i].dy = randomInt(10,15)/10*(playerY-enemy[i].y)/getDistence(playerX,playerY,enemy[i].x, enemy[i].y);
 }
 
 var smartEnemy = [];
@@ -80,7 +77,7 @@ function drawEnemy(){
     for(var i=0; i<enemyCount; i++){
         ctx.beginPath();
         ctx.arc(enemy[i].x, enemy[i].y,enemyR, 0, Math.PI*2);
-        ctx.fillStyle="#FF00FF";
+        ctx.fillStyle="#BB0055";
         ctx.fill();
         ctx.closePath();
     }
@@ -100,8 +97,8 @@ function getDistence(x1,y1,x2,y2){return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y
 
 function enemyMove(){
     for(var i=0; i<enemyCount; i++){
-        enemy[i].x += enemy[i].dx;
-        enemy[i].y += enemy[i].dy;
+        enemy[i].x += enemy[i].dx*enemySpeedMul;
+        enemy[i].y += enemy[i].dy*enemySpeedMul;
 
         if(enemy[i].x<enemyR || enemy[i].x>canvas.width-enemyR){enemy[i].dx = -enemy[i].dx;}
         else if(enemy[i].y<enemyR || enemy[i].y>canvas.height-enemyR){enemy[i].dy= -enemy[i].dy;}
@@ -124,10 +121,33 @@ function sEnemyMove(){
 
 }
 
-function drawPlayerXY(){
-    ctx.font = "10px Arial";
+function drawTime(){
+    ctx.font = "20px";
     ctx.fillStyle = "#000000";
-    ctx.fillText("("+playerX+","+playerY+")"+score+", "+heart, 8, 15);
+    ctx.fillText(time, canvas.width/2-40, 30);
+}
+
+function drawPlayerHeart(){
+    ctx.font = "30px Arial";
+    ctx.fillStyle = "#EE0000";
+    switch(heart){
+        case 3:
+            ctx.fillText("OOO", canvas.width-100, canvas.height-10);
+            break;
+        case 2:
+            ctx.fillText("OOX", canvas.width-100, canvas.height-10);
+            break;
+        case 1:
+            ctx.fillText("OXX", canvas.width-100, canvas.height-10);
+            break;
+        case 0:
+            ctx.fillText("XXX", canvas.width-100, canvas.height-10);
+            break;
+        default:
+            ctx.fillText("ERR", canvas.width-100, canvas.height-10);
+            break;
+    }
+    
 }
 
 function drawPlayer(){
@@ -142,6 +162,7 @@ function drawPlayer(){
     ctx.fill();
     ctx.closePath();
 }
+
 
 function collisonBtwEnemy(){
     for(var i=0; i<enemyCount; i++){
@@ -161,7 +182,7 @@ function collisionCheck(){
     if(!imun){
         for(var i=0; i<enemyCount; i++){
             if(getDistence(playerX,playerY,enemy[i].x, enemy[i].y)<playerR+enemyR){
-                //heart--;
+                heart--;
                 imun = true;
                 if(heart<0){gameover();}
             }
@@ -183,66 +204,85 @@ function collisionCheck_s(){
     
 }
 
-function enemyMinSpeed(){
-    for(var i=0;i<enemyCount; i++){
-        if(Math.abs(enemy[i].dx)<1.5){
-            enemy[i].dx *= 1.1;
-        }
-        if(Math.abs(enemy[i].dy)<1.5){
-            enemy[i].dy *= 1.1;
+var itemx=0;
+var itemy=0;
+var itemWidth = 6
+var isItemOnField = false;
+var itemTimer = 30;
+
+function drawItem(){
+    ctx.beginPath();
+    ctx.rect(itemx,itemy,itemWidth,itemWidth);
+    if(isItemOnField){
+        ctx.fillStyle="#0000FF";
+    }
+    else{
+        ctx.fillStyle="rgba(0,0,0,0)";
+    }
+    ctx.fill();
+    ctx.closePath();
+}
+
+function setItem(){
+    itemx = randomInt(10,canvas.width-10);
+    itemy = randomInt(10,canvas.height-10);
+    isItemOnField = true;
+}
+
+function collisionOnItem(){
+    if(getDistence(playerX,playerY,itemx+1.5,itemy-1.5)<=playerR+itemWidth/1.4 && isItemOnField){
+        if(enemyR>2){
+            enemyR --;
+            isItemOnField = false;
         }
     }
 }
 
 function gameover(){
-    //alert("!! YOU LOSE !!");
     ctx.clearRect(0,0,canvas.width,canvas.height);
     
     ctx.font = "50px Arial";
     ctx.fillStyle = "#000000";
     ctx.fillText("GAME OVER", canvas.width-450, canvas.height/2);
 
-    //document.location.reload();
     clearInterval(interval);
 }
 
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     drawPlayer();
-    drawPlayerXY();
+    drawTime();
+    drawPlayerHeart();
     drawEnemy();
+    drawItem();
     //if(score > 20){drawSEnemy();}
     
     
     collisionCheck();
+    collisionOnItem();
     //if(score> 20){collisionCheck_s();}
     
     playerMove();
     enemyMove();
     //if(score > 20){sEnemyMove();}
-    
-    if(score>0){
-        collisonBtwEnemy();
-    }
-    
-    
-    enemyMinSpeed();
 
-    time++;
-    if(time%60==0){
-        score++;
+    frame++;
+    if(frame%60==0){
+        time++;
         if(imun){imun=false;}
 
-        if(score!=0 && score%10==0){
-            for(var i=0; i<enemyCount; i++){
-                enemy[i].dx *= 1.1;
-                enemy[i].dy *= 1.1;
-            }
+        if(time!=0 && time%20==0){
+            enemySpeedMul+=0.1;
         }
 
-        if(score!=0 && score%15==0){
+        if(time!=0 && time%15==0){
             enemyR++;
             
+        }
+
+        if(time!=0 && time==itemTimer){
+            setItem();
+            itemTimer *= 2.2;
         }
     }
     
