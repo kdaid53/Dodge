@@ -3,8 +3,15 @@
     <head>
         <meta charset="uft-8" />
     <title>Canvas Workshop</title>
+    
     </head>
     <body>
+        
         <button onclick="location.href='index.html'">START</button>
+        <p>highscore : 
+        <script>
+            document.write(localStorage.getItem("dd_playername")+"/"+localStorage.getItem("dd_highscore"));
+        </script>
+        </p>
     </body>
 </html>

@@ -12,10 +12,13 @@ var enemySpeedMul = 1;
 
 var heart = 3;
 var imun = false;
+var highScore = 0;
 
 var frame = 0;
 var time = 0
 var leftf,rightf,upf,downf = false;
+
+highScore = localStorage.getItem("dd_highscore");
 
 // 37-left 38-up 39-right 40-down
 function keyDownHandler(e){
@@ -125,6 +128,13 @@ function drawTime(){
     ctx.font = "20px";
     ctx.fillStyle = "#000000";
     ctx.fillText(time, canvas.width/2-40, 30);
+}
+
+
+function drawPlayerName(){
+    ctx.font = "15px";
+    ctx.fillStyle = "#000000";
+    ctx.fillText(playerName, 10, 25);
 }
 
 function drawPlayerHeart(){
@@ -238,12 +248,37 @@ function collisionOnItem(){
     }
 }
 
+var playerName="";
+var initGame = true;
+function getPlayerName(){
+    playerName = document.getElementById("$playerName").value;
+    if(playerName.length>10){
+        playerName = playerName.substring(0,9);
+    }
+    if(initGame){
+        draw();
+        initGame = false;
+    }
+    else{
+        window.location.reload();
+    }
+}
+
+function newRecord(){
+
+}
+
 function gameover(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     
     ctx.font = "50px Arial";
     ctx.fillStyle = "#000000";
     ctx.fillText("GAME OVER", canvas.width-450, canvas.height/2);
+    
+    if(time>highScore){
+        localStorage.setItem("dd_playername",playerName);
+        localStorage.setItem("dd_highscore",time);
+    }
 
     clearInterval(interval);
 }
@@ -252,6 +287,7 @@ function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     drawPlayer();
     drawTime();
+    drawPlayerName();
     drawPlayerHeart();
     drawEnemy();
     drawItem();
@@ -265,10 +301,17 @@ function draw(){
     playerMove();
     enemyMove();
     //if(score > 20){sEnemyMove();}
+    if(time>highScore){
+        ctx.font = "20px Arial";
+        ctx.fillStyle = "#999999";
+        ctx.fillText("NEW RECORD", 10, canvas.height-10);
+    }
 
     frame++;
     if(frame%60==0){
         time++;
+        
+
         if(imun){imun=false;}
 
         if(time!=0 && time%20==0){
@@ -292,4 +335,4 @@ function draw(){
 document.addEventListener("keydown",keyDownHandler,false);
 document.addEventListener("keyup",keyUpHandler,false);
 
-draw();
+//draw();
